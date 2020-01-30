@@ -1,0 +1,75 @@
+{% extends "__base__.html" %}
+{% block title %}{% endblock title %}
+{% block content %}
+  <div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+
+    <div class="row border-bottom border-3 p-1 m-1">
+      <div class="col noPadding">
+        <h3 class="color-header text-uppercase">SZCZEGÓŁY PLANU</h3>
+      </div>
+      <div>
+          <a href="{% url 'add-recipe-to-plan' plan.id 0 %}" class=" btn btn-primary" >Dodaj przepis do tego planu</a>
+          <a href="{% url 'edit-plan' plan.id %}" class=" btn btn-warning" >Edytuj plan</a>
+          <a href="{% url 'plans' %}" class="btn btn-danger">Powrót</a>
+      </div>
+    </div>
+
+    <div class="schedules-content">
+      <div class="schedules-content-header">
+        <div class="form-group row">
+                                <span class="col-sm-2 label-size col-form-label">
+                                    Nazwa planu
+                                </span>
+          <div class="col-sm-10">
+            <p class="schedules-text">{{ plan.name }}</p>
+          </div>
+        </div>
+        <div class="form-group row">
+                                <span class="col-sm-2 label-size col-form-label">
+                                    Opis planu
+                                </span>
+          <div class="col-sm-10">
+            <p class="schedules-text">
+              {{ plan.description }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <table class="table">
+        {% for recipe_plan_object in recipe_plans %}
+          <thead>
+          {% ifchanged %}
+            <tr class="d-flex gsapRow">
+              <th class="col-2">{{ recipe_plan_object.day_name.get_day_display }}</th>
+              <th class="col-7"></th>
+              <th class="col-1"></th>
+              <th class="col-2"></th>
+            </tr>
+          {% endifchanged %}
+          </thead>
+          <tbody class="text-color-lighter">
+          <tr class="d-flex gsapRow">
+            <td class="col-2">{{ recipe_plan_object.meal_name }}</td>
+            <td class="col-7">{{ recipe_plan_object.recipe.name }}</td>
+            <td class="col-1 center">
+{#              aby poprawnie obsluzyc formularze za pomocą przycisku należy stworzyć dynamiczne ich nazwy #}
+              <button type="submit" form="delete_recipe_{{ recipe_plan_object.id }}"
+                      class="btn btn-danger">Usuń</button>
+            </td>
+            <td class="col-2 center">
+              <a href="{% url "recipe-details" recipe_plan_object.recipe.id %}"
+                 class="btn btn-info">Szczegóły</a>
+            </td>
+          </tr>
+          </tbody>
+{#          Każdy przycisk jest przypisany do inngeo formularza o nazwie zależnej od id obiekty z modelu RecipePlan #}
+          <form id="delete_recipe_{{ recipe_plan_object.id }}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="recipe_plan_id" value="{{ recipe_plan_object.id }}">
+          </form>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+{% endblock content %}

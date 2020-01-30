@@ -1,0 +1,55 @@
+{% extends "__base__.html" %}
+{% block content %}
+  {#  jezeli jest jakis komunikat bledu#}
+  {% if messages %}
+    {#      przeiteruj po calej liscie bledow#}
+    {% for msg in messages %}
+        <div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {#      wyswietle komunikat#}
+          {{ msg.message }}
+        </div>
+    {% endfor %}
+  {% endif %}
+    <div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+
+        <div class="row border-bottom border-3 p-1 m-1">
+            <div class="col noPadding">
+                <h3 class="color-header text-uppercase">NOWY PLAN</h3>
+            </div>
+            <div class="col d-flex justify-content-end mb-2 noPadding">
+              {#          atrybut form wskazuje na odpowiednie id w formularzu, do ktorego ma sie odwolywac#}
+                <button type="submit" form="add_schelude_form"
+                        value="Zapisz" class="btn btn-success pl-4 pr-4">Zapisz i zamknij</button>
+            </div>
+        </div>
+
+        <div class="schedules-content">
+            <form method="POST" id="add_schelude_form">
+              {% csrf_token %}
+                <div class="form-group row">
+                    <label for="planName"
+                           class="col-sm-2 label-size col-form-label">
+                        Nazwa planu
+                    </label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="planName" name="name" placeholder="Nazwa planu"
+                               type="text">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="planDescription"
+                           class="col-sm-2 label-size col-form-label">
+                        Opis planu
+                    </label>
+                    <div class="col-sm-10">
+                    <textarea class="form-control" id="planDescription" name="description"
+                              placeholder="Opis planu" rows="5" type="text"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block title %}{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "__base__.html" %}
+{% block title %}{% endblock %}
+{% block content %}
+<div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+
+    <div class="row border-bottom border-3 p-1 m-1">
+        <div class="col noPadding">
+            <h3 class="color-header text-uppercase">
+                Lista Przepisów
+            </h3>
+        </div>
+        <div class="">
+            <a href="{% url 'add-recipe' %}"
+               class="btn btn-success">
+                Dodaj nowy przepis
+            </a>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+        <tr class="d-flex text-color-darker">
+            <th scope="col" class="col-1">ID</th>
+            <th scope="col" class="col-2">NAZWA</th>
+            <th scope="col" class="col-7">OPIS</th>
+            <th scope="col" class="col-2 center">AKCJE</th>
+        </tr>
+        </thead>
+        <tbody class="text-color-lighter">
+        {% for recipe in recipes %}
+            <tr class="d-flex  mt-4 p-2 gsapRow">
+                <th scope="row" class="col-1">{{ recipe.id }}</th>
+                <td class="col-2">
+                    {{ recipe.name }} ({{ recipe.votes }})
+                </td>
+                <td class="col-7">{{ recipe.description }}
+                </td>
+                <td class="col-2 ml-auto d-flex flex-wrap">
+                    <a href="{% url 'add-recipe-to-plan' 0 recipe.id %}"
+                       class="w-100 btn btn-primary mb-2">Dodaj przepis do planu</a>
+                    <a href="{% url 'recipe-details' recipe.id %}"
+                       class="w-100 btn btn-info mb-2">Szczegóły</a>
+                    <a href="{% url 'modify-recipe' recipe.id %}"
+                       class="w-100 btn btn-warning mb-2">Edytuj</a>
+                     <button onclick="location.href='{% url 'delete-recipe' recipe.id %}'" 
+                       class="w-100 btn btn-danger mb-2">Usuń</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="pagination">
+        <span class="step-links">
+            {% if recipes.has_previous %}
+                <a href="?page={{ recipes.previous_page_number }}">< poprzednia</a>
+            {% endif %}
+
+            <span class="current">
+                {% for page in num_pages %}
+                  {% if forloop.counter == recipes.number %}
+                    | <a href="?page={{ forloop.counter }}"><strong>{{ forloop.counter }}</strong></a>
+                  {% else %}
+                    | <a href="?page={{ forloop.counter }}">{{ forloop.counter }}</a>
+                  {% endif %}
+                {% endfor %}
+            </span>
+
+            {% if recipes.has_next %}
+                <a href="?page={{ recipes.next_page_number }}">nastepna ></a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+{% endblock content %}

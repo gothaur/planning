@@ -1,0 +1,161 @@
+{% extends "__base__.html" %}
+{% block title %} Edycja przepisu{% endblock title %}
+{% block content %}
+
+{#  jezeli jest jakis komunikat bledu#}
+  {% if messages %}
+    {#      przeiteruj po calej liscie bledow#}
+    {% for msg in messages %}
+        <div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {#      wyswietle komunikat#}
+          {{ msg.message }}
+        </div>
+    {% endfor %}
+  {% endif %}
+      
+    <form action="" id="post_form" method="post" >
+        {% csrf_token %}
+        <input type="hidden" value="" id="json_value" name="json_value">
+        <input type="hidden" value="" id="save_type" name="save_type">
+    </form>
+    <div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+        <div class="mt-4 ml-4 mr-4 ">
+            <div class="row border-bottom border-3">
+                <div class="col">
+                    <h3 class="color-header text-uppercase">Edytuj przepis</h3>
+                </div>
+                <div class="col d-flex justify-content-end mb-2">
+                    <button onclick="onMainFormSubmit('saveAsNew')" form="post_form" type="submit" class="btn btn-primary mr-2">Zapisz zmiany jako nowy przepis</button>
+                    <button onclick="onMainFormSubmit('save')" type="submit" form="post_form" class="btn btn-success pl-4 pr-4">Zapisz i zamknij</button>
+                </div>
+            </div>
+
+            <table class="table borderless">
+                <tbody>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Nazwa Przepisu</th>
+                            <td class="col-7">
+                                <input form="post_form" class="w-100 p-1 form-control" value="{{ recipe.name }}" name="recipe_name">
+                            </td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Opis przepisu</th>
+                        <td class="col-7">
+                            <textarea form="post_form" class="w-100 p-1 form-control" rows="5" name="description">{{ recipe.description }}
+                            </textarea>
+                        </td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Przygotowanie (minuty)</th>
+                        <td class="col-3">
+                            <input form="post_form" class="p-1 form-control" type="number" min="0" value="{{ recipe.preparation_time }}" name="preparation_time">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row d-flex">
+                <div class="col-5 border-bottom border-3">
+                    <h3 class="text-uppercase">Sposób przygotowania</h3>
+                </div>
+                <div class="col-2"></div>
+                <div class="col-5 border-bottom border-3">
+                    <h3 class="text-uppercase">Składniki</h3>
+                </div>
+            </div>
+
+            <div class="row d-flex">
+                <div class="col-5 p-4">
+                    <textarea form="post_form" class="w-100 p-1 form-control" rows="10" name="how_to_prepare">{{recipe.how_to_prepare }}</textarea>
+                </div>
+                <div class="col-2"></div>
+                 <div class="col-5 p-4">
+                 <form id="add_ingredient" action="" method="post">
+                     {% csrf_token %}
+                     <div class="form-group hint">
+                         <div class="inputHints"></div>
+                         <input oninput="onInputChange(this)" autocomplete="off" class="form-control" type="text" id="ingredient_name" name="ingredient_name" placeholder="Nazwa" required>
+                     </div>
+                     <div class="form-group">
+                         <input autocomplete="off" class="form-control" type="text" id="ingredient_quantity" name="ingredient_quantity" placeholder="ilość" required>
+                     </div>
+                     <button onclick="addItem()" class="btn btn-outline-primary form-control" type="button">Dodaj składnik</button>
+                 </form>
+                     <table class="table" id="ingredientTable">
+                         <tbody>
+                         <tr>
+                             <th></th>
+                             <th>Składniki</th>
+                             <th>Ilość</th>
+                         </tr>
+
+                         {% for ingredient in recipe_ingredients %}
+                            <tr id="{{ ingredient.id }}" class="ingredient">
+
+                                <td><button onclick="deleteItem({{ ingredient.id }})" class="btn btn-outline-danger">Usuń</button></td>
+                                <td ><input class="ing_name form-control" type="text" value="{{ ingredient.name }}"></td>
+                                <td ><input class="ing_quantity form-control" type="text" value="{{ ingredient.quantity }}"></td>
+                            </tr>
+                         {% endfor %}
+                         </tbody>
+                     </table>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock content %}
+
+{% block javascript %}
+
+
+<script>
+
+const deleteItem = id => {
+    const tr = document.querySelectorAll('.ingredient');
+    tr.forEach(item => Number(item.id) === id && item.remove())
+};
+
+const addItem = () => {
+    const tr = document.querySelectorAll('.ingredient');
+    const lastID = tr[tr.length - 1].id + 1;
+    const name = document.getElementById('ingredient_name').value;
+    const quantity = document.getElementById('ingredient_quantity').value;
+
+    if ( name && quantity){
+        $("#ingredientTable > tbody:last-child").append(`
+        <tr id="${lastID}" class="ingredient">
+            <td><button onclick="deleteItem(${lastID})" class="btn btn-outline-danger">Usuń</button></td>
+            <td><input class="ing_name form-control" type="text" value="${name}"></td>
+            <td><input class="ing_quantity form-control" type="text" value="${quantity}"></td>
+        </tr>
+        `)
+    }else {
+        return alert('Uzupełnij pola!')
+    }
+     $('form#add_ingredient').trigger("reset");
+};
+
+const onMainFormSubmit = type => {
+    const saveTypeInput = document.getElementById('save_type');
+    const tr = document.querySelectorAll('.ingredient');
+    const json = [];
+    tr.forEach(item => {
+        const name = item.querySelector('.ing_name').value;
+        const quantity = item.querySelector('.ing_quantity').value;
+        json.push({id: item.id, name, quantity})
+    });
+    if (type === 'save'){
+        saveTypeInput.value = 'save'
+    }else{
+        saveTypeInput.value = 'save_as_new'
+    }
+    const inp = document.getElementById('json_value');
+    inp.value = JSON.stringify(json);
+}
+
+</script>
+{% endblock javascript %}

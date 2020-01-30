@@ -1,0 +1,165 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{% endblock title %} | Zaplanuj Jedzonko</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Charmonman:400,700|Open+Sans:400,600,700&amp;subset=latin-ext"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static "css/style.css" %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+</head>
+
+<body>
+    <header class="page-header">
+        <nav class="navbar navbar-expand-lg justify-content-between">
+            <a href="/" class="navbar-brand main-logo main-logo-smaller">
+                Zaplanuj <span>Jedzonko</span>
+            </a>
+         <div class="d-flex justify-content-around">
+             <h4 class="text-light mr-3">Imię</h4>
+             <div class="circle-div text-center"><i class="fas fa-user icon-user"></i></div>
+         </div>
+        </nav>
+    </header>
+
+    <section class="dashboard-section">
+        <div class="row dashboard-nowrap">
+                <ul class="nav flex-column long-bg">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
+                                <span>Pulpit</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'recipes' %}">
+                                <span>Przepisy</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'plans' %}">
+                                <span>Plany</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <!-- Podstrony związane z zarządzaniem użytkownikami
+                        <li class="nav-item">
+                            <a class="nav-link" href="">
+                                <span>Edytuj dane</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="">
+                                <span>Zmień hasło</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="">
+                                <span>Użytkownicy</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        -->
+                    </ul>
+
+            <div class="m-4 p-3 width-medium text-color-darker">
+    {% block content %}{% endblock content %}
+        </div></div>
+    </section>
+
+<!-- //--------------------------- page content -------------------------// -->
+
+<!-- //--------------------------- page content end ---------------------// -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.0.5/gsap.min.js" ></script>
+ <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script>
+
+const allInputs = document.querySelectorAll("input");
+allInputs.forEach(input=> input.classList.add('form-control'));
+const gsapDashboard = document.querySelector('.gsapDashboard');
+const singleTableRow = document.querySelectorAll('.gsapRow');
+const dashboardButtons = document.querySelectorAll('.gsapDashboardButton');
+
+const tableAnimation = () => {
+    const tl = new gsap.timeline();
+    tl
+        .to(gsapDashboard, .5, { opacity: 1, y :0 })
+        .staggerTo(singleTableRow, .5, {y:0, opacity:1, delay: -.4}, .1);
+
+};
+
+tableAnimation();
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+const inputHintsDiv = document.querySelector('.inputHints');
+
+const onInputChange = () =>{
+    const value = document.getElementById('ingredient_name').value;
+    inputHintsDiv.childNodes.forEach(node => node.remove());
+    inputHintsDiv.innerHTML = '';
+    if (value){
+    fetch("{% url 'inputFilter' %}", {
+        method: 'POST',
+        headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+        },
+        body: JSON.stringify({inputValue: value}),
+    })
+    .then(data=> data.json())
+    .then(({data}) => {
+        const names = data.map(({fields}) => fields.name);
+        names.forEach(name=>{
+            if (value === name.slice(0, value.length) ){
+                const elementToApend = document.createElement('DIV');
+                elementToApend.classList.add('inputHint');
+                elementToApend.textContent = name;
+                elementToApend.onclick = e => onHintClick(e);
+                inputHintsDiv.appendChild(elementToApend);
+            }
+        })
+
+    })
+}};
+
+const onHintClick = e => {
+    const input = document.getElementById('ingredient_name');
+    inputHintsDiv.innerHTML = "";
+    input.value = e.target.textContent
+};
+
+
+
+</script>
+        {% block javascript %}
+    {% endblock javascript %}
+
+
+</body>
+</html>

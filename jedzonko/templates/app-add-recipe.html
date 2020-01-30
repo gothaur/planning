@@ -1,0 +1,224 @@
+{% extends "__base__.html" %}
+
+{% block title %}Nowy przepis{% endblock %}
+
+{% block content %}
+    <div>
+{#  jezeli jest jakis komunikat bledu#}
+  {% if messages %}
+    {#      przeiteruj po calej liscie bledow#}
+    {% for msg in messages %}
+        <div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {#      wyswietle komunikat#}
+          {{ msg.message }}
+        </div>
+    {% endfor %}
+  {% endif %}
+      
+    <form action="" id="post_form" method="post" onsubmit="onMainFormSubmit()">
+        {% csrf_token %}
+        <input type="hidden" value="" id="ingredient_list" name="ingredient_list">
+    </form>
+
+    <div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+        <div class="mt-4 ml-4 mr-4 ">
+
+            <div class="row border-bottom border-3">
+                <div class="col">
+                    <h3 class="color-header text-uppercase">Nowy przepis</h3>
+                </div>
+                <div class="col d-flex justify-content-end mb-2">
+                    <button type="submit" form="post_form" class="btn btn-success pl-4 pr-4">Zapisz i zamknij</button>
+                </div>
+              
+            </div>
+                
+            <table class="table borderless">
+                <tbody>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Nazwa Przepisu</th>
+                            <td class="col-7">
+                                <input form="post_form" class="w-100 p-1" value="" name="recipe_name">
+                            </td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Opis przepisu</th>
+                        <td class="col-7">
+                            <textarea form="post_form" class="w-100 p-1" rows="5" name="recipe_description"></textarea>
+                        </td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="row" class="col-2">Przygotowanie (minuty)</th>
+                        <td class="col-3">
+                            <input form="post_form" class="p-1" type="number" min="0" value="" name="preparation_time">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row d-flex">
+                <div class="col-5 border-bottom border-3">
+                    <h3 class="text-uppercase">Sposób przygotowania</h3>
+                </div>
+                <div class="col-2"></div>
+                <div class="col-5 border-bottom border-3">
+                    <h3 class="text-uppercase">Składniki</h3>
+                </div>
+            </div>
+                
+            <div class="row d-flex">
+                <div class="col-5 p-4">
+                    <textarea form="post_form" class="w-100 p-1" rows="10" name="how_to_prepare"></textarea>
+                </div>
+                <div class="col-2"></div>
+                 <div class="col-5 p-4">
+              <form id="add_ingredient" action="">
+                    {% csrf_token %}
+                      <div class="form-group hint">
+                        <input oninput="onInputChange(this)" autocomplete="off" class="form-control" type="text" id="ingredient_name" name="ingredient_name" placeholder="Nazwa" required>
+                      <div class="inputHints">
+                      </div>
+
+                      </div>
+                      <div class="form-group">
+                        <input class="form-control" type="text" id="ingredient_quantity" name="ingredient_quantity" placeholder="ilość" required>
+                      </div>
+                        <button class="btn btn-outline-primary form-control" type="submit">Dodaj składnik</button>
+                    </form>
+
+                     <table class="table" id="ingredientTable">
+                         <tbody>
+                         <tr>
+                             <th>Składniki</th>
+                             <th>Ilość</th>
+                         </tr>
+                        <tr class="message active_message">
+                            <td>Nie dodano żadnych składników!</td>
+                        </tr>
+                         </tbody>
+                     </table>
+
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Edytuj składnik</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <form autocomplete="off" id="save_changes" action="" >
+                <label for="edit-ing">Składnik</label>
+                <input class="form-control" id="edit-ing" type="text" name="edit-ing"/>
+                <label for="edit-quant">Ilość</label>
+                <input class="form-control" id="edit-quant" type="text" name="edit-quant">
+        </form>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Zamknij</button>
+        <button data-dismiss="modal" type="button" onclick="onEditIngredientSave()" class="btn btn-primary">Zapisz</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+const ingredientListInput = document.getElementById('ingredient_list');
+const recipeNameInput = $('input[name="recipe_name"]');
+const howToPrepareInput = $('textarea[name="how_to_prepare"]');
+const preparationTimeInput = $('input[name="preparation_time"]');
+const recipeDescriptionInput = $('textarea[name="recipe_description"]');
+const messageDOM = document.querySelector('.message');
+let ingredientsList = [];
+
+$("form#add_ingredient").submit( e => {
+    e.preventDefault();
+    const ingredientNameInput = $('input[name="ingredient_name"]').val().trim().toLowerCase();
+    const ingredientQuantityInput = $('input[name="ingredient_quantity"]').val().trim();
+    const itemExist = ingredientsList.find(({name}) => name === ingredientNameInput);
+    if (itemExist){
+        $('form#add_ingredient').trigger("reset");
+        return alert('Taki składnik znajduje się już na liście');
+    } else {
+        ingredientNameInput && ingredientQuantityInput && appendToTable(ingredientNameInput, ingredientQuantityInput);
+    }
+});
+
+const appendToTable = ( name, quantity ) =>{
+    const id = ingredientsList.length > 0 ? ingredientsList[ingredientsList.length - 1].id + 1 : 0;
+    ingredientsList.push({id, name, quantity});
+    $("#ingredientTable > tbody:last-child")
+        .append(`
+        <tr id="ingredient-${id}">
+            <td id='ing-name'>${name}</td>
+            <td id='ing-quantity'>${quantity}</td>
+            <td>
+                <button onclick="editIngredient(${id})" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter" > Edytuj </button>
+            </td>
+            <td>
+                <button onclick="deleteIngredient(${id})"  class="btn btn-danger form-control"> Usuń </button>
+            </td>
+        </tr>
+    `);
+    $('form#add_ingredient').trigger("reset");
+    handleMessage()
+};
+
+const deleteIngredient = btnID => {
+    ingredientsList = ingredientsList.filter(({id}) => id !== Number(btnID));
+    document.getElementById(`ingredient-${btnID}`).remove();
+    handleMessage()
+};
+
+let ingredientToEdit = null;
+
+const editIngredient = btnID => {
+    document.getElementById('exampleModalCenter').style.opacity = '1';
+    const ing_input = document.getElementById('edit-ing');
+    const quantity_input = document.getElementById('edit-quant');
+    ingredientToEdit = ingredientsList.find(item => item.id === Number(btnID));
+    ing_input.value = ingredientToEdit.name;
+    quantity_input.value = ingredientToEdit.quantity;
+};
+
+const onEditIngredientSave = () => {
+    const ing_input = document.getElementById('edit-ing').value;
+    const quantity_input = document.getElementById('edit-quant').value;
+    const id = ingredientToEdit.id;
+    ingredientsList[id] =  {
+        id: ingredientToEdit.id,
+        name: ing_input,
+        quantity: quantity_input
+    };
+    const trIng = $(`#ingredientTable > tbody > tr#ingredient-${id} > td#ing-name`);
+    const trQ = $(`#ingredientTable > tbody > tr#ingredient-${id} > td#ing-quantity`);
+    trIng.text(ing_input);
+    trQ.text(quantity_input);
+};
+
+const handleMessage = ()=> {
+    ingredientsList.length === 0 ? messageDOM.classList = "active message" : messageDOM.classList = 'hidden_message'
+
+};
+
+const onMainFormSubmit = ()=> {
+    ingredientListInput.value = JSON.stringify(ingredientsList);
+};
+
+</script>
+{% endblock javascript %}

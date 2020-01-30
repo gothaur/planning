@@ -1,0 +1,98 @@
+{% extends "__base__.html" %}
+{% block title %}{% endblock %}
+{% block content %}
+<div class="dashboard-content border-dashed p-3 m-4 view-height gsapDashboard">
+    {% for msg in messages %}
+        <div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {#      wyswietle komunikat#}
+          {{ msg.message }}
+        </div>
+    {% endfor %}
+
+    <div class="mt-4 ml-4 mr-4">
+        <div class="row border-bottom border-3">
+            <div class="col"><h3 class="color-header text-uppercase">Szczegóły
+                przepisu</h3></div>
+            <div>
+                <a href="{% url 'add-recipe-to-plan' 0 recipe.id %}" class="btn btn-primary" >Dodaj ten przepis do planu</a>
+                <a href="{% url 'modify-recipe' recipe.id %}" class="btn btn-warning">Edytuj przepis</a>
+                <a href="javascript:history.go(-1);"
+                    class="btn btn-danger">
+                    Powrót
+                </a>
+            </div>
+        </div>
+
+        <table class="table borderless">
+            <tbody>
+            <tr class="d-flex">
+                <th scope="row" class="col-2">Nazwa Przepisu</th>
+                <td class="col-7">
+                    {{ recipe.name }}
+                </td>
+            </tr>
+            <tr class="d-flex">
+                <th scope="row" class="col-2">Opis przepisu</th>
+                <td class="col-7">{{ recipe.description }}</td>
+            </tr>
+            <tr class="d-flex">
+                <th scope="row" class="col-2">Przygotowanie (minuty)</th>
+                <td class="col-7">
+                    {{ recipe.preparation_time }}
+                </td>
+            </tr>
+             <tr class="d-flex">
+                <th scope="row" class="col-2">Liczba polubień</th>
+                 <td class="col-7">
+                   {{ recipe.votes }} <button type="submit" form="up_vote_form"
+                                              class="btn btn-success rounded-5 ml-2">Polub przepis</button>
+                   <button type="submit" form="down_vote_form"
+                           class="btn btn-danger rounded-5">Nie lubię przepisu</button>
+                 </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="row d-flex">
+            <div class="col-5 border-bottom border-3">
+                <h3 class="text-uppercase">Sposób przygotowania</h3>
+            </div>
+            <div class="col-2"></div>
+            <div class="col-5 border-bottom border-3">
+                <h3 class="text-uppercase">Składniki</h3>
+            </div>
+        </div>
+
+        <div class="row d-flex">
+            <div class="col-5 p-4"><p>{{ recipe.how_to_prepare }}</p></div>
+            <div class="col-2"></div>
+              <div class="col-5 p-4">
+              <table class="table">
+                  <tbody>
+                        <tr>
+                           <th>Składnik</th>
+                           <th>Ilość</th>
+                       </tr>
+                        {% for ingredient in recipe_ingredients %}
+                         <tr>
+                             <td>{{ ingredient.name }} </td>
+                             <td>{{ ingredient.quantity }} </td>
+                         </tr>
+                        {% endfor %}
+                  </tbody>
+              </table>
+              </div>
+        </div>
+
+    </div>
+</div>
+    <form method="POST" id="up_vote_form">
+    {% csrf_token %}
+        <input type="hidden" name="form" value="up_vote">
+    </form>
+    <form method="POST" id="down_vote_form">
+    {% csrf_token %}
+        <input type="hidden" name="form" value="down_vote">
+    </form>
+{% endblock content %}
